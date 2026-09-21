@@ -7,7 +7,7 @@ from .car_parsing import make_model, mileage, parameter_values, price_fields, ye
 
 
 class AutogidasConnector(Connector):
-    info = ConnectorInfo("autogidas", "Autogidas", "https://autogidas.lt", "cars", live_status="blocked", last_live_check="2026-09-21")
+    info = ConnectorInfo("autogidas", "Autogidas", "https://autogidas.lt", "cars", live_status="blocked", last_live_check="2026-09-21", live_browser="visible-chrome")
     listing_pattern = r"/skelbimas/[^/]+-\d+\.html"
     filters = ("query", "price_from", "price_to", "year_from", "year_to")
 
@@ -24,6 +24,9 @@ class AutogidasConnector(Connector):
         soup = self.soup(html)
         items = []
         for node in soup.select("a.item-link"):
+            # Native finance banners reuse the card class but are explicitly sponsored.
+            if "sponsored" in node.get("rel", []):
+                continue
             title = require_title(text_at(node, ".item-title"))
             make, model = make_model(title)
             values = [clean(n) for n in node.select("span.parameter-value") if clean(n)]

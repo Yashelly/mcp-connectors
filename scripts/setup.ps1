@@ -15,4 +15,12 @@ if ($LASTEXITCODE -ne 0) { throw "Dependency installation failed." }
 if ($LASTEXITCODE -ne 0) { throw "Package installation failed." }
 & $VenvPython -m playwright install chromium
 if ($LASTEXITCODE -ne 0) { throw "Chromium installation failed." }
+$ChromeCandidates = @(
+    "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
+    "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe",
+    "$env:LOCALAPPDATA\Google\Chrome\Application\chrome.exe"
+)
+if (-not ($ChromeCandidates | Where-Object { Test-Path -LiteralPath $_ })) {
+    Write-Warning "Visible mode defaults to Google Chrome. Install Chrome, or set MCP_BROWSER_CHANNEL=chromium to use bundled Chromium."
+}
 Write-Host "Ready. Run scripts\check.ps1, then scripts\run.ps1."

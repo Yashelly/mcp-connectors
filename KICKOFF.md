@@ -34,8 +34,10 @@ Required behavior:
 - Source-specific errors and useful partial results.
 - Distinct empty, layout-change, network, missing-listing, and blocked statuses.
 - HTTP(S)/domain/path validation, redirect checks, and private-network rejection.
-- Headless Chromium by default. CAPTCHA/interactive verification returns
-  `blocked`; no hidden manual or visible-browser fallback.
+- Visible Chromium with a dedicated persistent profile by default, as requested
+  after the initial headless implementation. Keep headless as an explicit option.
+  Wait for user-completed verification; return `blocked` if it remains unresolved.
+  Never automate CAPTCHA solving or import personal profiles.
 
 Authentication, applications, ad publication, messaging, and paid services are
 outside scope. Keep Windows setup reproducible. Do not replace MCP with REST

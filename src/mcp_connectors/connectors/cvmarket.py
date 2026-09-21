@@ -9,7 +9,7 @@ from .base import Connector, ConnectorInfo, ParsedPage
 
 
 class CVmarketConnector(Connector):
-    info = ConnectorInfo("cvmarket", "CVmarket", "https://www.cvmarket.lt", "jobs", live_status="passed", last_live_check="2026-09-21")
+    info = ConnectorInfo("cvmarket", "CVmarket", "https://www.cvmarket.lt", "jobs", live_status="passed", last_live_check="2026-09-21", live_browser="visible-chrome")
     listing_pattern = r"/[^/]+-\d{7,}/?"
     filters = ("query", "city")
     cities = {"Vilnius": 134, "Kaunas": 135, "Klaipėda": 136, "Šiauliai": 137, "Panevėžys": 138}

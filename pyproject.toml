@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "mcp-connectors"
 version = "0.1.0"
-description = "Headless website MCP connectors hosted on Windows 11"
+description = "Website MCP connectors with visible Chromium sessions on Windows 11"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

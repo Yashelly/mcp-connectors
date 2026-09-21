@@ -6,7 +6,7 @@ from .base import Connector, ConnectorInfo, ParsedPage
 
 
 class CVbankasConnector(Connector):
-    info = ConnectorInfo("cvbankas", "CVbankas", "https://www.cvbankas.lt", "jobs", live_status="passed", last_live_check="2026-09-21")
+    info = ConnectorInfo("cvbankas", "CVbankas", "https://www.cvbankas.lt", "jobs", live_status="passed", last_live_check="2026-09-21", live_browser="visible-chrome")
     listing_pattern = r"/[^/]+/1-\d+/?"
     filters = ("query", "city")
     cities = {"Vilnius": 606, "Kaunas": 530, "Klaipėda": 538, "Šiauliai": 581, "Panevėžys": 560}

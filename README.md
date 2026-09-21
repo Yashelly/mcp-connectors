@@ -1,32 +1,33 @@
 # MCP Connectors
 
 Public job and car listing tools for Windows 11, Python 3.12+, official MCP
-Python SDK v2, async Playwright, and headless Chromium. Independent website
-adapters share a bounded browser runtime. No accounts are required.
+Python SDK v2, async Playwright, and visible Google Chrome (Chromium engine). Independent website
+adapters share a bounded browser runtime with a dedicated persistent profile.
+No accounts are required. Headless mode remains an explicit option.
 
 ## Live status
 
 Checked on **September 21, 2026** on this Windows host. Availability can change.
 Implementation status and live access status are separate.
 
-| Source | Filters | Local headless verification |
+| Source | Filters | Visible Chrome verification |
 |---|---|---|
 | CVbankas | Keyword, city | Search, empty results, page 2, and detail passed |
 | CVmarket | Keyword, city | Search, empty results, page 2, and detail passed |
 | CVonline | Keyword, city | Search, empty results, page 2, and detail passed |
-| Autoplius | Keyword, price range, year range | Search and detail blocked: HTTP 403 browser verification |
+| Autoplius | Keyword, price range, year range | Search, empty results, page 2, and detail passed |
 | Autogidas | Keyword, price range, year range | Search and detail blocked: HTTP 403 browser verification |
 
-The car adapters are implemented and fixture-tested, but **not verified as
-usable in local headless operation**. Their actual search, filters, pagination,
-empty states, and detail DOM were inspected in the in-app browser. That was a
-development aid, never a runtime fallback. The server returns `blocked` without
-solving CAPTCHAs, borrowing cookies, or opening an interactive browser.
-See [validation evidence](docs/VALIDATION.md).
+Autogidas remains **unreliable and blocked in the final live run**, including
+after user-completed verification. Occasional successful pages are not a
+working end-to-end connector. Its actual DOM was also inspected in the in-app
+browser, strictly as a development aid. The runtime does not use that browser,
+solve CAPTCHAs, or borrow personal cookies. Both car sites were blocked in the
+original headless baseline. See [validation evidence](docs/VALIDATION.md).
 
 ## Windows setup and launch
 
-Install Python 3.12+ and run:
+Install Python 3.12+ and Google Chrome, then run:
 
 ```powershell
 cd C:\Users\rober\mcp-connectors
@@ -60,13 +61,43 @@ to stderr. The launcher also accepts `-Transport stdio` and `-Port 8766`.
 
 HTTP binds only to loopback. Remote access, authentication, TLS, and installing
 a persistent Windows service are outside this implementation. A service account
-needs its own Playwright Chromium installation.
+needs its own Playwright Chromium installation. Visible mode requires an
+interactive Windows desktop; do not run it as a background Session 0 service.
+
+### Visible sessions and website verification
+
+Normal startup opens a visible Chromium window when the first website request
+arrives. Source tabs are reused, and cookies/local storage are saved in
+`.browser_profiles/chrome`, a dedicated Git-ignored profile. Restarting the
+server retains this profile. It is separate from personal Chrome/Edge and
+Job_Seeker profiles. Only one server process can use a profile at a time.
+`MCP_BROWSER_CHANNEL=chromium` selects bundled Chromium with a separate
+`.browser_profiles/chromium` profile; its behavior can differ from Chrome.
+
+When a site requests verification, complete it yourself in its open tab. The
+tool waits up to 120 seconds by default and continues when the page becomes
+available. If time expires, the tool returns `blocked` while keeping the tab
+open. Complete the check and retry the same tool. `health.pending_verification`
+lists waiting URLs. Retrying an unresolved check returns immediately rather
+than starting another wait or reloading the challenge. Sites may expire cookies
+or request another check later. Browser tabs close when the server stops; saved profile
+data remains. The live smoke script stops its stdio server when the check ends.
+
+To use isolated headless sessions instead:
+
+```powershell
+$env:MCP_HEADLESS = "true"
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run.ps1
+```
+
+Use `$env:MCP_HEADLESS = "false"` to return to visible mode. A visible window
+does not guarantee site access; unresolved challenges still return `blocked`.
 
 ## Tools and examples
 
 | Tool | Arguments | Result |
 |---|---|---|
-| `health` | None | Configuration and lifecycle state without browser startup |
+| `health` | None | Configuration, lifecycle, and pending verification URLs without browser startup |
 | `list_connectors` | None | Implementation status, recorded live status, filters |
 | `browser_check` | None | Offline Chromium and JavaScript check |
 | `search_jobs` | `options`, optional `sources` | Results and errors per job source |
@@ -150,25 +181,32 @@ an empty search. Always inspect each source's status and errors.
 
 ## Runtime and URL policy
 
-Chromium starts lazily. Each fetch uses a fresh context without saved cookies
-or profiles. One browser operation runs at a time. Each page gets at most two
+Chromium starts lazily. Visible mode reuses guarded source tabs in the dedicated
+profile; explicit headless mode uses fresh temporary contexts. One browser
+operation runs at a time. Each page gets at most two
 attempts, with a 0.5-second delay; only network failures are retried. An attempt
-is bounded by the configured timeout plus five seconds, including queue wait.
+is bounded by the navigation timeout plus the verification wait and five
+seconds, including queue wait. Headless mode has no manual verification wait.
 The DOM limit is 8 MB; the navigation limit is eight document requests.
 
 Listing tools accept HTTP(S), exact source domains with or without `www`,
 default ports, and observed listing paths. Credentials and listing query
 strings are rejected. Chromium request-stage interception checks main-frame
 redirects before following them, restricts document hosts, and rejects
-non-public DNS answers. HTTP subresources receive public-address checks;
-third-party frames, images, media, and fonts are blocked. Service workers and
+non-public DNS answers. HTTP subresources receive public-address checks.
+Images and fonts load normally in the visible window. Frames are restricted to
+the source domains and `challenges.cloudflare.com`, with the same DNS checks.
+Media, service workers, and
 downloads are disabled. This is an application boundary, not an OS sandbox.
 
 | Environment variable | Default | Purpose |
 |---|---|---|
-| `MCP_HEADLESS` | `true` | `false` only for deliberate local debugging |
+| `MCP_HEADLESS` | `false` | Visible persistent browser; `true` enables isolated headless mode |
+| `MCP_BROWSER_CHANNEL` | `chrome` | Visible browser: installed `chrome` or bundled `chromium`; headless always uses bundled Chromium |
 | `MCP_BROWSER_TIMEOUT_MS` | `30000` | 1000–120000 ms per navigation |
 | `MCP_LOCALE` | `lt-LT` | Browser context locale |
+| `MCP_BROWSER_PROFILE_DIR` | `.browser_profiles/<channel>` under the project | Dedicated profile directory; never point this at a personal profile |
+| `MCP_VERIFICATION_TIMEOUT_SECONDS` | `120` | 0–600 seconds to wait for user verification; 0 reports immediately and keeps the tab |
 
 `.env` is not loaded automatically. Logs, local configuration, `.venv`, and
 runtime artifacts are Git-ignored. No Job_Seeker cookies, profiles, accounts,
@@ -177,12 +215,14 @@ databases, or personal files are imported.
 ## Validation and development
 
 `scripts/check.ps1` checks installed dependencies, fixture/validation/security
-tests, and a real MCP client over stdio and loopback HTTP. It does not contact
-the target sites. Run live checks separately:
+tests, and a real MCP client over stdio and loopback HTTP. Automated checks use
+headless rendering and temporary test profiles; they do not contact the target
+sites. Run visible live checks separately:
 
 ```powershell
 .\.venv\Scripts\python.exe .\scripts\live_smoke.py --extended
 .\.venv\Scripts\python.exe .\scripts\live_smoke.py --sources cvbankas cvmarket cvonline --extended
+.\.venv\Scripts\python.exe .\scripts\live_smoke.py --headless --extended --output artifacts/live-headless.json
 ```
 
 The live check searches each source and reads one card. `--extended` also

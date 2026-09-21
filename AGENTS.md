@@ -6,7 +6,8 @@
 
 - This is a standalone project, hosted on Windows 11 with Python 3.12+.
 - Start each feature/fix on a new `codex/` branch. Never commit to or merge into `main`.
-- Use async Playwright Chromium, headless by default, behind the shared browser layer.
+- Use async Playwright's Chromium engine behind the shared browser layer. Visible installed Chrome with a dedicated persistent profile is the default; bundled Chromium and headless mode are explicit options.
+- Keep verification tabs open for the user. Never automate CAPTCHA solving or import personal browser profiles.
 - Keep adapters independent. Current targets: CVbankas, CVonline, Autogidas, CVmarket, Autoplius.
 - Inspect `KICKOFF.md` before implementing website tools. Placeholder adapters are not working scrapers.
 - Use the official MCP Python SDK v2 API. Keep stdout exclusively for MCP protocol messages.

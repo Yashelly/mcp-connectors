@@ -114,6 +114,16 @@ class ParsingTests(unittest.TestCase):
         self.assertIsNotNone(item.fuel)
         self.assertIsNone(item.location)
 
+    def test_autogidas_sponsored_banner_is_not_a_car_card(self):
+        adapter = self.adapters["autogidas"]
+        html = fixture("autogidas", "search")
+        banner = '<a class="item-link" rel="sponsored" href="https://r.autogidas.lt/trackers?id=example"><div class="lenders-content-title">Example finance banner</div></a>'
+        result = adapter.parse_search(html.replace("</body>", banner + "</body>"), adapter.info.website, 1)
+        self.assertEqual(len(result.items), 2)
+        with self.assertRaises(ConnectorError) as caught:
+            adapter.parse_search('<a class="item-link" href="/skelbimas/example-123.html"></a>', adapter.info.website, 1)
+        self.assertEqual(caught.exception.detail.code, "layout_changed")
+
     def test_verified_url_filters_and_pagination(self):
         expected = {"cvbankas": ("keyw", "page", "2"), "cvmarket": ("search[keyword]", "start", "30"),
                     "cvonline": ("keywords[0]", "offset", "20"), "autogidas": ("f_376", "page", "2"),
