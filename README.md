@@ -5,6 +5,10 @@ Python SDK v2, async Playwright, and visible Google Chrome (Chromium engine). In
 adapters share a bounded browser runtime with a dedicated persistent profile.
 No accounts are required. Headless mode remains an explicit option.
 
+Intended for self-hosting on home servers, personal PCs, or other Windows hosts
+with a public IP address. This describes the host's Internet connection; the MCP
+endpoint remains bound to loopback (`127.0.0.1`) by default.
+
 ## Live status
 
 Checked on **September 21, 2026** on this Windows host. Availability can change.
