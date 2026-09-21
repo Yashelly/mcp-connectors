@@ -19,18 +19,16 @@ class SettingsTests(unittest.TestCase):
 
 
 class ConnectorTests(unittest.IsolatedAsyncioTestCase):
-    async def test_registry_is_lazy_and_placeholders_fail_honestly(self):
+    async def test_registry_is_lazy_and_invalid_urls_do_not_launch_browser(self):
         browser = BrowserRuntime(Settings())
         try:
             registry = create_connectors(browser)
             self.assertEqual(set(registry), {"cvbankas", "cvonline", "autogidas", "cvmarket", "autoplius"})
             self.assertFalse(browser.started)
             for adapter in registry.values():
-                self.assertEqual(adapter.describe()["status"], "planned")
-                with self.assertRaises(NotImplementedError):
-                    await adapter.search("example")
-                with self.assertRaises(NotImplementedError):
-                    await adapter.get_listing(adapter.info.website)
+                self.assertEqual(adapter.describe()["status"], "implemented")
+                result = await adapter.get_listing("http://127.0.0.1/private")
+                self.assertEqual(result.status, "invalid_url")
             self.assertFalse(browser.started)
         finally:
             await browser.close()
