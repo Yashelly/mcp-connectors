@@ -1,5 +1,9 @@
 # MCP Connectors
 
+- Write all documentation, comments, application messages, commit text, and authored project text in English.
+- Communicate directly with the user in Russian.
+- Preserve literal source-site text only when required for parsing or fixture fidelity.
+
 - This is a standalone project, hosted on Windows 11 with Python 3.12+.
 - Start each feature/fix on a new `codex/` branch. Never commit to or merge into `main`.
 - Use async Playwright Chromium, headless by default, behind the shared browser layer.

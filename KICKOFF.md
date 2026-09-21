@@ -1,65 +1,60 @@
-# Kickoff: реализация коннекторов
+# Connector implementation requirements
 
-Скопируй промпт ниже в новую задачу, открыв папку C:\Users\rober\mcp-connectors.
+Work in `C:\Users\rober\mcp-connectors`, the standalone Windows 11 repository
+at https://github.com/Yashelly/mcp-connectors. Read `AGENTS.md`, `README.md`,
+`pyproject.toml`, the browser layer, server, and adapters before changing code.
 
----
+Use Python 3.12+, official MCP Python SDK v2, async Playwright, and Chromium.
+Preserve stdio, loopback Streamable HTTP, lifecycle cleanup, and the offline
+browser check. Placeholder adapters do not count as working connectors.
+Record current evidence and limitations in [docs/VALIDATION.md](docs/VALIDATION.md).
 
-Работай в C:\Users\rober\mcp-connectors — отдельном репозитории headless MCP-коннекторов
-для Windows 11. Репозиторий GitHub: https://github.com/Yashelly/mcp-connectors.
+## Scope
 
-Цель: довести существующий каркас до рабочих коннекторов для пяти сайтов:
-CVbankas (cvbankas.lt), CVonline (cvonline.lt), Autogidas (autogidas.lt),
-CVmarket (cvmarket.lt), Autoplius (autoplius.lt).
+Implement public-data adapters for CVbankas, CVmarket, CVonline, Autoplius,
+and Autogidas. Inspect real search pages, form parameters, pagination, empty
+states, and detail pages. Never invent selectors or treat fixture checks as
+proof of live access. Start with CVbankas, then CVmarket, CVonline, Autoplius,
+and Autogidas.
 
-Сначала прочитай AGENTS.md, README.md, pyproject.toml, browser.py, server.py и адаптеры.
-Каркас уже использует Python 3.12+, официальный MCP Python SDK 2.2.0, async Playwright
-и Chromium. Есть stdio, локальный Streamable HTTP, lifecycle и offline browser smoke.
-Сейчас пять адаптеров имеют статус planned: поиск и чтение карточек ещё не реализованы.
-Не создавай новый проект и не выдавай эти заготовки за рабочие коннекторы.
+Use `C:\Users\rober\Job_Seeker` as a read-only code reference, especially
+`src/cvbankas_tracker/sources/browser_fetch.py`, `cvbankas.py`, and `cvmarket.py`.
+Do not modify it or transfer secrets, cookies, profiles, databases, accounts,
+or personal files.
 
-Референс: C:\Users\rober\Job_Seeker, особенно
-src/cvbankas_tracker/sources/browser_fetch.py, cvbankas.py, cvmarket.py и остальные
-релевантные адаптеры. Изучи их подход и используй подходящие идеи парсинга.
-Исходный Job_Seeker не меняй и не переноси из него секреты, cookies, профили, БД или личные данные.
+Required behavior:
 
-Весь обычный сбор выполняй через headless Chromium без участия пользователя.
-Сохраняй общий браузерный слой и отдельные адаптеры. Для каждого сайта изучи живую
-структуру страниц, реальные URL, фильтры, пагинацию и карточки; не придумывай селекторы.
-Начни с CVbankas как вертикального среза, затем CVmarket, CVonline, Autoplius, Autogidas.
+- Search, verified filters, bounded pagination, and listing URL reads.
+- Jobs: title, company, location, salary/currency/period/raw text, description,
+  requirements, date where available, URL, and source.
+- Cars: make, model, year, price/currency, mileage, fuel, transmission, engine,
+  location, description, date where available, URL, and source.
+- Typed models and clear MCP tools. Missing values remain null.
+- Limits on results, pages, concurrency, timeouts, and retries.
+- Source-specific errors and useful partial results.
+- Distinct empty, layout-change, network, missing-listing, and blocked statuses.
+- HTTP(S)/domain/path validation, redirect checks, and private-network rejection.
+- Headless Chromium by default. CAPTCHA/interactive verification returns
+  `blocked`; no hidden manual or visible-browser fallback.
 
-Реализуй поиск, ограниченную пагинацию и чтение объявления по URL.
-Для вакансий: заголовок, компания, место, зарплата с валютой/периодом и исходным текстом,
-описание, требования, дата при наличии, URL и источник.
-Для авто: марка, модель, год, цена/валюта, пробег, топливо, коробка, двигатель,
-место, описание, дата при наличии, URL и источник.
-Отсутствующие значения возвращай null; не подставляй выдуманные данные.
+Authentication, applications, ad publication, messaging, and paid services are
+outside scope. Keep Windows setup reproducible. Do not replace MCP with REST
+or make Docker/Linux mandatory.
 
-Определи типизированные модели и ясные MCP-инструменты для поиска вакансий,
-поиска автомобилей и чтения карточки, с указанием источника.
-Добавляй фильтры только после проверки их реальной поддержки сайтом.
-Ограничь limit, число страниц, параллелизм, таймауты и повторные попытки.
-Проверяй домен и схему входного URL, включая редиректы; не допускай произвольного
-доступа к локальной сети через инструменты чтения.
-Ошибки одного источника должны давать понятный частичный результат.
-Отличай отсутствие результатов от изменения верстки, ошибки сети и блокировки сайта.
-При CAPTCHA или необходимости интерактивной проверки верни явный blocked status.
-Не добавляй скрытый переход к ручному/видимому браузеру в обычном запуске.
+## Acceptance and delivery
 
-Область этапа — чтение публичных данных. Авторизация, отклики, публикация объявлений,
-переписка с работодателями/продавцами и платные сервисы в эту задачу не входят.
-Сохрани headless=True по умолчанию и работоспособность под Windows 11.
-Не заменяй MCP обычным REST API и не добавляй Docker/Linux как обязательное условие.
+Add anonymized fixtures and tests for every source: parsing, missing fields,
+empty results, blocked pages, invalid URLs, and limits. Run a small live search
+and one detail read per site through a real MCP client. Check stdio and HTTP.
+Record inaccessible sites and their concrete failure reasons; do not mark them
+ready.
 
-Для каждого источника добавь обезличенные HTML fixtures и тесты парсинга,
-проверь ограничения, неверные URL, пустую выдачу и блокировки.
-Запусти небольшую live smoke-проверку поиска и одной карточки на каждом сайте,
-проверь stdio и HTTP через реальный MCP-клиент. Если сайт недоступен,
-зафиксируй конкретную причину и не отмечай его готовым.
-Обнови README с действительными инструментами, примерами запросов и статусами.
-Закрепи зависимости и повтори Windows setup/check после изменений.
+Update the README with actual tools, examples, filters, limits, and statuses.
+Pin dependencies in `requirements.lock`. Repeat Windows setup and
+`powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check.ps1`.
 
-Работай последовательно до завершения доступного объёма. Обычные решения принимай
-самостоятельно. Не делай коммитов или merge в main.
-Создай новую ветку codex/<название-задачи>, проверь изменения, закоммить и отправь
-ветку в GitHub. В отчёте дай по каждому сайту: что работает, результаты live smoke,
-ограничения и команды запуска. Отдельно укажи, что не проверено.
+Create a `codex/*` branch, review changes, commit, and push it to GitHub.
+Never commit to or merge into `main`. Report per-source results, limitations,
+unverified behavior, and launch commands. All authored project text is English;
+direct conversation with the user is Russian. Preserve literal source text
+where parsing requires it.
