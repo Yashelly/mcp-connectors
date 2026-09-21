@@ -9,6 +9,7 @@ dist/
 !.env.example
 .browser_profiles/
 logs/
+debug.log
 artifacts/
 *.local.*
 .omx/

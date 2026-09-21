@@ -1,5 +1,31 @@
 # Validation record
 
+## Windows autostart: September 21, 2026
+
+`scripts/autostart.ps1` installs an interactive, least-privilege scheduled task
+for the current Windows user and checkout. The exported definition has a logon
+trigger, an indefinite one-minute recovery trigger, no execution time limit,
+and `IgnoreNew` for concurrent starts. Stop disables recovery before terminating
+the task. No Windows automatic-login settings or user credentials are changed.
+
+The console-free Python entry point fixes visible browser settings, writes
+rotating local logs, and assigns itself and browser descendants to a Windows
+job with kill-on-close behavior. A forced-exit test verifies descendant cleanup.
+`pywin32==312`, already present in `requirements.lock`, is now an explicit
+Windows runtime dependency.
+
+The Windows check suite contains 42 tests plus real stdio and HTTP MCP checks.
+The additional tests cover the actual exported task definition, management
+ordering, unrelated-task protection, and forced process-tree termination.
+
+The opt-in `scripts/smoke_autostart.ps1` check registers a temporary real task,
+verifies MCP and visible Chromium offline, kills the server process, waits for
+the actual recovery trigger, verifies MCP again, and confirms that stopping the
+task releases its port. The temporary task is removed afterward. This check
+passed on Windows 11. Reboot/logon triggers were inspected in the task definition;
+the host was not rebooted or signed out during validation. Windows Server,
+automatic Windows login, and a ChatGPT tunnel were not tested or configured.
+
 ## Visible-session follow-up: September 21, 2026
 
 The user requested visible operation after the headless car-site failures.
