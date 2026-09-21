@@ -68,6 +68,57 @@ a persistent Windows service are outside this implementation. A service account
 needs its own Playwright Chromium installation. Visible mode requires an
 interactive Windows desktop; do not run it as a background Session 0 service.
 
+### Automatic startup on Windows
+
+After setup and checks, install autostart from the Windows account that will
+run Chrome. Stop any manually started server first, then run:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\autostart.ps1
+```
+
+This installs a Task Scheduler task for the current user and checkout, and
+starts it immediately. It runs with the user's normal privileges, starts at
+logon, and retries every minute if the process exits. A running instance is
+left alone. The task has no execution time limit and keeps running on battery
+power. Python runs without a console; website browser windows remain visible.
+Task Scheduler recovery does not detect a hung process or fix site blocking.
+Stopping the task terminates its browser descendants as well. Runtime logs go
+to `logs/autostart.log`, with three rotated backups of up to 2 MB each.
+
+Google Chrome must be installed for the default configuration. To use the
+Chromium downloaded by setup, install with `-BrowserChannel chromium` instead.
+Use `-Port 8766` to choose a different loopback port. Run the installation
+command again to update settings; this restarts the managed server.
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\autostart.ps1 -Action Status
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\autostart.ps1 -Action Stop
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\autostart.ps1 -Action Start
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\autostart.ps1 -Action Remove
+```
+
+`Stop` disables future triggers before stopping the task. `Start` enables it
+again. `Remove` stops and unregisters it without deleting the browser profile.
+`Export` prints the task XML without installing anything. `Status` reports task
+state, not MCP health; use `scripts/smoke.py --http-url http://127.0.0.1:8765/mcp`
+to check the endpoint. Run all management commands from the same checkout and
+Windows account. If local policy denies task registration, use an elevated
+PowerShell under that same account.
+
+For an optional end-to-end Task Scheduler check, run
+`powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\smoke_autostart.ps1`.
+It creates a temporary task on a free port, opens visible Chromium for an offline
+MCP check, terminates the server to verify automatic recovery, and removes the
+task afterward. Allow about two minutes. Stop this checkout's normal server
+before the check so it can use the runtime logs and bundled Chromium profile.
+
+Visible mode requires the user to be logged in. After a reboot, it starts after
+that user signs in; signing out stops availability. Unattended startup after a
+reboot also requires Windows automatic login, which these scripts do not enable
+or store credentials for. Keep the host awake. A ChatGPT tunnel is a separate
+process and needs its own startup configuration.
+
 ### Visible sessions and website verification
 
 Normal startup opens a visible Chromium window when the first website request
