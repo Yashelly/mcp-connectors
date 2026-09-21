@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "mcp-connectors": {
+      "command": "C:\\Users\\rober\\mcp-connectors\\.venv\\Scripts\\python.exe",
+      "args": [
+        "-m",
+        "mcp_connectors"
+      ],
+      "env": {
+        "MCP_HEADLESS": "true"
+      }
+    }
+  }
+}
