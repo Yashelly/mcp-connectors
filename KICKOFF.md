@@ -57,6 +57,5 @@ Pin dependencies in `requirements.lock`. Repeat Windows setup and
 
 Create a `codex/*` branch, review changes, commit, and push it to GitHub.
 Never commit to or merge into `main`. Report per-source results, limitations,
-unverified behavior, and launch commands. All authored project text is English;
-direct conversation with the user is Russian. Preserve literal source text
-where parsing requires it.
+unverified behavior, and launch commands. All authored project text is English.
+Preserve literal source text where parsing requires it.

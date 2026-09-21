@@ -1,7 +1,7 @@
 # MCP Connectors
 
 - Write all documentation, comments, application messages, commit text, and authored project text in English.
-- Communicate directly with the user in Russian.
+- Keep personal conversation preferences out of version-controlled project files.
 - Preserve literal source-site text only when required for parsing or fixture fidelity.
 
 - This is a standalone project, hosted on Windows 11 with Python 3.12+.
