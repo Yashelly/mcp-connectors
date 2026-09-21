@@ -7,7 +7,8 @@
         "mcp_connectors"
       ],
       "env": {
-        "MCP_HEADLESS": "true"
+        "MCP_HEADLESS": "false",
+        "MCP_BROWSER_CHANNEL": "chrome"
       }
     }
   }

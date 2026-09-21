@@ -16,15 +16,23 @@ class NetworkGuard:
         self.errors: list[ConnectorError] = []
         self.document_requests = 0
 
+    def reset(self):
+        self.checked.clear()
+        self.errors.clear()
+        self.document_requests = 0
+
     async def paused(self, event):
         request_id = event["requestId"]
         main = event.get("resourceType") == "Document" and event.get("frameId") == self.main_frame
         try:
-            if event.get("resourceType") in {"Image", "Media", "Font"} or (event.get("resourceType") == "Document" and not main):
-                await self.session.send("Fetch.failRequest", {"requestId": request_id, "errorReason": "Aborted"})
-                return
             url = validate_url(event["request"]["url"], self.hosts if main else None)
             host = urlsplit(url).hostname
+            # Permit the verified challenge provider's frame so users can complete
+            # a check in the visible browser. It still receives public DNS checks.
+            foreign_frame = event.get("resourceType") == "Document" and not main and host not in self.hosts | {"challenges.cloudflare.com"}
+            if event.get("resourceType") in {"Media"} or foreign_frame:
+                await self.session.send("Fetch.failRequest", {"requestId": request_id, "errorReason": "Aborted"})
+                return
             if host not in self.checked:
                 await public_host(host)
                 self.checked.add(host)

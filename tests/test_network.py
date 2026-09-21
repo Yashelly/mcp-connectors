@@ -37,6 +37,20 @@ class NetworkTests(IsolatedAsyncioTestCase):
         self.assertEqual(guard.errors[-1].detail.code, "network_error")
         self.assertEqual(session.send.call_args.args[0], "Fetch.failRequest")
 
+    async def test_challenge_frame_is_allowed_only_on_public_provider(self):
+        session = AsyncMock()
+        guard = NetworkGuard(session, "main", frozenset({"www.cvbankas.lt"}))
+        with patch("mcp_connectors.network.public_host", AsyncMock()) as dns:
+            await guard.paused({"requestId": "frame", "resourceType": "Document", "frameId": "child",
+                                "request": {"url": "https://challenges.cloudflare.com/check"}})
+            dns.assert_awaited_once_with("challenges.cloudflare.com")
+            self.assertEqual(session.send.call_args.args[0], "Fetch.continueRequest")
+        with patch("mcp_connectors.network.public_host", AsyncMock(side_effect=ConnectorError("invalid_url", "Private DNS"))):
+            guard.reset()
+            await guard.paused({"requestId": "frame", "resourceType": "Document", "frameId": "child",
+                                "request": {"url": "https://challenges.cloudflare.com/check"}})
+            self.assertEqual(session.send.call_args.args[0], "Fetch.failRequest")
+
     async def test_chromium_redirect_is_rejected_before_following(self):
         """Fulfill the initial HTTPS request locally; inspect a real Chromium redirect."""
         commands = []
@@ -58,7 +72,7 @@ class NetworkTests(IsolatedAsyncioTestCase):
             def __init__(self, session, main_frame, hosts):
                 super().__init__(RedirectSession(session), main_frame, hosts)
 
-        browser = BrowserRuntime(Settings(timeout_ms=5000))
+        browser = BrowserRuntime(Settings(headless=True, timeout_ms=5000))
         try:
             with patch("mcp_connectors.browser.NetworkGuard", RedirectGuard), patch("mcp_connectors.network.public_host", AsyncMock()):
                 with self.assertRaises(ConnectorError) as caught:

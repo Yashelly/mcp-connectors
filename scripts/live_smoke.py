@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 import sys
+import os
 
 from mcp import Client, StdioServerParameters
 from smoke import unpack
@@ -19,9 +20,12 @@ CAR_DETAIL_URLS = {
 
 async def run(args):
     target = args.http_url or StdioServerParameters(command=sys.executable, args=["-m", "mcp_connectors"],
-                    cwd=str(ROOT), env={"MCP_HEADLESS": "true"})
-    report = {"checked_at": datetime.now(timezone.utc).isoformat(), "transport": "http" if args.http_url else "stdio", "headless": True, "sources": {}}
-    async with Client(target, read_timeout_seconds=240) as client:
+                    cwd=str(ROOT), env={**os.environ, "MCP_HEADLESS": str(args.headless).lower()})
+    report = {"checked_at": datetime.now(timezone.utc).isoformat(), "transport": "http" if args.http_url else "stdio", "sources": {}}
+    async with Client(target, read_timeout_seconds=900) as client:
+        health = unpack(await client.call_tool("health", {}))
+        report["headless"] = health["headless"]
+        report["browser_channel"] = health["browser_channel"]
         for source in args.sources:
             cars = source in CAR_DETAIL_URLS
             tool = "search_cars" if cars else "search_jobs"
@@ -31,6 +35,8 @@ async def run(args):
             else:
                 options["city"] = "Vilnius"
             result = unpack(await client.call_tool(tool, {"options": options, "sources": [source]}))["results"][0]
+            print(json.dumps({"source": source, "stage": "search", "status": result["status"],
+                              "count": len(result["items"]), "errors": result["errors"]}, ensure_ascii=True), flush=True)
             entry = {"search": {key: result[key] for key in ("status", "pages_fetched", "has_more", "truncated", "errors")},
                      "count": len(result["items"]), "options": options}
             url = result["items"][0]["url"] if result["items"] else CAR_DETAIL_URLS.get(source)
@@ -57,6 +63,7 @@ async def run(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--http-url")
+    parser.add_argument("--headless", action="store_true", help="Use isolated headless Chromium instead of the default visible persistent session")
     parser.add_argument("--sources", choices=SOURCES, nargs="+", default=list(SOURCES))
     parser.add_argument("--extended", action="store_true", help="Also probe empty results and page 2 for accessible sources")
     parser.add_argument("--output", type=Path, default=ROOT / "artifacts" / "live-smoke.json")

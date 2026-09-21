@@ -18,3 +18,7 @@ The shared blocked fixture is reduced from the actual localized Cloudflare
 response received by local headless Chromium on both car sites. Successful
 in-app inspection is **not** evidence of successful local headless access.
 The runtime never uses the in-app browser as a fallback.
+
+The visible-session follow-up also inspected Autogidas native finance banners:
+they use `a.item-link` with `rel="sponsored"` and no car title. A regression test
+includes a reduced banner so it cannot invalidate an otherwise valid result page.

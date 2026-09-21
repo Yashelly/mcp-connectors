@@ -10,7 +10,7 @@ from .base import Connector, ConnectorInfo, ParsedPage
 
 
 class CVonlineConnector(Connector):
-    info = ConnectorInfo("cvonline", "CVonline", "https://www.cvonline.lt", "jobs", live_status="passed", last_live_check="2026-09-21")
+    info = ConnectorInfo("cvonline", "CVonline", "https://www.cvonline.lt", "jobs", live_status="passed", last_live_check="2026-09-21", live_browser="visible-chrome")
     listing_pattern = r"/(?:lt/)?vacancy/\d+(?:/[^/]+){0,2}/?"
     filters = ("query", "city")
     cities = {"Vilnius": 540, "Kaunas": 501, "Klaipėda": 505, "Šiauliai": 528, "Panevėžys": 517}

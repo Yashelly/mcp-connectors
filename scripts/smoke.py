@@ -34,9 +34,10 @@ async def check(http_url: str | None) -> None:
             names = {tool.name for tool in (await client.list_tools()).tools}
             assert names == {"health", "list_connectors", "browser_check", "search_jobs", "search_cars", "get_listing"}, names
             status = unpack(await client.call_tool("health", {}))
-            assert status["status"] == "ok" and status["headless"] is True, status
+            assert status["status"] == "ok", status
+            expected_headless = status["headless"]
             if not http_url:
-                assert status["browser_started"] is False, status
+                assert expected_headless is True and status["browser_started"] is False, status
             adapters = unpack(await client.call_tool("list_connectors", {}))
             assert {item["id"] for item in adapters} == EXPECTED, adapters
             assert all(item["status"] == "implemented" for item in adapters), adapters
@@ -47,7 +48,7 @@ async def check(http_url: str | None) -> None:
             empty_sources = unpack(await client.call_tool("search_cars", {"options": {}, "sources": []}))
             assert empty_sources["results"] == [], empty_sources
             browser = unpack(await client.call_tool("browser_check", {}))
-            assert browser == {"status": "ok", "headless": True, "javascript": "rendered"}, browser
+            assert browser == {"status": "ok", "headless": expected_headless, "javascript": "rendered"}, browser
             status = unpack(await client.call_tool("health", {}))
             assert status["browser_started"] is True, status
     print(json.dumps({"transport": "http" if http_url else "stdio", "status": "ok",

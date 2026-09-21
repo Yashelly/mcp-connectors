@@ -82,14 +82,18 @@ def json_nodes(soup):
     return nodes
 
 
-def inspect_page(html: str, status: int = 200, url: str | None = None):
-    soup = BeautifulSoup(html, "html.parser")
+def verification_required(soup) -> bool:
     title = (clean(soup.title) or "").lower()
     text = (clean(soup) or "").lower()
     markers = ("verify you are human", "checking your browser", "tikriname jūsų naršyklę",
                "saugumo patvirtinimo atlikimas", "patvirtinti kad esate ne robotas",
-               "enable javascript and cookies", "access denied")
-    if status in {401, 403, 429} or any(m in title for m in ("just a moment", "luktelėkite")) or any(m in text for m in markers):
+               "enable javascript and cookies")
+    return any(m in title for m in ("just a moment", "luktelėkite")) or any(m in text for m in markers)
+
+
+def inspect_page(html: str, status: int = 200, url: str | None = None):
+    soup = BeautifulSoup(html, "html.parser")
+    if status in {401, 403, 429} or verification_required(soup) or "access denied" in (clean(soup) or "").lower():
         raise ConnectorError("blocked", "Site requires verification or denied/rate-limited the request", url, status)
     if status in {404, 410}:
         raise ConnectorError("not_found", "Listing/page no longer exists", url, status)

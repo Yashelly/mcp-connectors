@@ -7,7 +7,7 @@ from .car_parsing import make_model, mileage, parameter_values, price_fields, ye
 
 
 class AutopliusConnector(Connector):
-    info = ConnectorInfo("autoplius", "Autoplius", "https://autoplius.lt", "cars", live_status="blocked", last_live_check="2026-09-21")
+    info = ConnectorInfo("autoplius", "Autoplius", "https://autoplius.lt", "cars", live_status="passed", last_live_check="2026-09-21", live_browser="visible-chrome")
     listing_pattern = r"/skelbimai/[^/]+-\d+\.html"
     filters = ("query", "price_from", "price_to", "year_from", "year_to")
 

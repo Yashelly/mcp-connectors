@@ -19,6 +19,7 @@ class ConnectorInfo:
     status: str = "implemented"
     live_status: str = "unverified"
     last_live_check: str | None = None
+    live_browser: str = "headless-chromium"
 
 
 @dataclass

@@ -7,12 +7,16 @@ from mcp_connectors.connectors import create_connectors
 
 
 class SettingsTests(unittest.TestCase):
-    def test_headless_is_default(self):
+    def test_visible_is_default(self):
         with patch.dict("os.environ", {}, clear=True):
-            self.assertTrue(Settings.from_env().headless)
+            settings = Settings.from_env()
+            self.assertFalse(settings.headless)
+            self.assertEqual(settings.browser_channel, "chrome")
+            self.assertEqual(settings.profile_dir.name, "chrome")
 
     def test_invalid_configuration_fails(self):
-        for env in ({"MCP_HEADLESS": "maybe"}, {"MCP_BROWSER_TIMEOUT_MS": "0"}):
+        for env in ({"MCP_HEADLESS": "maybe"}, {"MCP_BROWSER_TIMEOUT_MS": "0"},
+                    {"MCP_VERIFICATION_TIMEOUT_SECONDS": "601"}, {"MCP_BROWSER_CHANNEL": "unknown"}):
             with self.subTest(env=env), patch.dict("os.environ", env, clear=True):
                 with self.assertRaises(ValueError):
                     Settings.from_env()
@@ -20,7 +24,7 @@ class SettingsTests(unittest.TestCase):
 
 class ConnectorTests(unittest.IsolatedAsyncioTestCase):
     async def test_registry_is_lazy_and_invalid_urls_do_not_launch_browser(self):
-        browser = BrowserRuntime(Settings())
+        browser = BrowserRuntime(Settings(headless=True))
         try:
             registry = create_connectors(browser)
             self.assertEqual(set(registry), {"cvbankas", "cvonline", "autogidas", "cvmarket", "autoplius"})
@@ -34,7 +38,7 @@ class ConnectorTests(unittest.IsolatedAsyncioTestCase):
             await browser.close()
 
     async def test_browser_recovers_after_operation_failure(self):
-        browser = BrowserRuntime(Settings())
+        browser = BrowserRuntime(Settings(headless=True))
         try:
             with self.assertRaisesRegex(RuntimeError, "test failure"):
                 async with browser.page(offline=True):
