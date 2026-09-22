@@ -9,6 +9,13 @@ Intended for self-hosting on home servers, personal PCs, or other Windows hosts
 with a public IP address. This describes the host's Internet connection; the MCP
 endpoint remains bound to loopback (`127.0.0.1`) by default.
 
+## Start here
+
+Follow the [Windows home server and ChatGPT installation guide](docs/WINDOWS_CHATGPT.md)
+for a complete setup: pinned dependencies, visible Chromium, MCP autostart,
+OpenAI Secure MCP Tunnel, Windows Credential Manager, tunnel recovery, and ChatGPT.
+The tunnel uses outbound connections; no inbound port forwarding is required.
+
 ## Live status
 
 Checked on **September 21, 2026** on this Windows host. Availability can change.
@@ -34,7 +41,7 @@ original headless baseline. See [validation evidence](docs/VALIDATION.md).
 Install Python 3.12+ and Google Chrome, then run:
 
 ```powershell
-cd C:\Users\rober\mcp-connectors
+cd "$env:USERPROFILE\mcp-connectors"
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run.ps1
@@ -63,8 +70,9 @@ Use [config/mcp-client.example.json](config/mcp-client.example.json), adjusting
 its absolute Python path if needed. Stdout carries MCP messages only; logs go
 to stderr. The launcher also accepts `-Transport stdio` and `-Port 8766`.
 
-HTTP binds only to loopback. Remote access, authentication, TLS, and installing
-a persistent Windows service are outside this implementation. A service account
+HTTP binds only to loopback. For ChatGPT access, use the separate OpenAI tunnel
+client described in the installation guide. A public HTTP deployment and a
+Session 0 Windows service are not configured by this project. A service account
 needs its own Playwright Chromium installation. Visible mode requires an
 interactive Windows desktop; do not run it as a background Session 0 service.
 
@@ -117,7 +125,8 @@ Visible mode requires the user to be logged in. After a reboot, it starts after
 that user signs in; signing out stops availability. Unattended startup after a
 reboot also requires Windows automatic login, which these scripts do not enable
 or store credentials for. Keep the host awake. A ChatGPT tunnel is a separate
-process and needs its own startup configuration.
+process; install its startup task with `scripts/tunnel-autostart.ps1` as described
+in the [installation guide](docs/WINDOWS_CHATGPT.md).
 
 ### Visible sessions and website verification
 
