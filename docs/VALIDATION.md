@@ -199,3 +199,22 @@ not contact target sites. Live checks are separate and intentionally small.
   operating-system network sandbox; sites remain untrusted external content.
 - Remote hosting, authentication, TLS, Windows service installation, and
   sustained-load testing were not part of this implementation.
+
+
+## Tunnel deployment and recovery (September 22, 2026)
+
+- The user supplied successful home-host client v0.0.14 startup logs and a
+  `ready` response from `/readyz`, then reported successful ChatGPT health,
+  connector listing and CVbankas search calls. This is user-provided deployment
+  evidence, not a fresh live check of every source.
+- `scripts/check.ps1` passed 48 tests and both stdio and HTTP MCP/browser smoke
+  checks after the tunnel launcher was added.
+- `scripts/smoke_tunnel_autostart.ps1` passed with a real temporary Windows
+  scheduled task and dummy child: launch, restart after forced child exit,
+  and descendant termination when the task stops. Temporary artifacts were
+  removed. No real tunnel credential or OpenAI connection was used in this test.
+- Tests cover task XML, secret decoding, child-only environment, log redaction,
+  safe preflight failure output, and disabling recovery before stopping.
+- The new managed tunnel task still needs installation on the home server.
+  Reboot, sign-out, Windows Server editions, and real OpenAI outage recovery
+  were not tested. Periodic triggers recover exited processes, not hangs.
