@@ -222,7 +222,9 @@ page fails, earlier items remain available with `status=partial`.
 Jobs include title, company, location, salary (minimum/maximum, currency,
 period, raw text), description, requirements, date, URL, and source. Cars
 include make, model, year, sale price/currency/raw text, mileage in km, fuel,
-transmission, engine, location, description, date, URL, and source.
+transmission, engine, color, location, description, date, URL, and source.
+Autoplius `get_listing` returns `color` from the published `Spalva` parameter,
+retaining the source language. Search summaries and missing colors return null.
 Search returns summaries; use `get_listing` for descriptions. Missing values
 remain null. Dates retain source formatting. Requirements are extracted only
 from recognized headings/lists. Site text retains its original language and

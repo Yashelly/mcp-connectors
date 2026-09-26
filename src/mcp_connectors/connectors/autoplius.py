@@ -49,6 +49,6 @@ class AutopliusConnector(Connector):
         return CarListing(source=self.info.id, url=url, title=title,
             make=clean(crumbs[0]) if crumbs else None, model=clean(crumbs[1]) if len(crumbs) > 1 else None,
             year=year(fields.get("Pirma registracija")), fuel=fields.get("Kuro tipas"), transmission=fields.get("Pavarų dėžė"),
-            mileage_km=mileage(fields.get("Rida")), engine=fields.get("Variklis"),
+            mileage_km=mileage(fields.get("Rida")), engine=fields.get("Variklis"), color=fields.get("Spalva"),
             description=text_at(soup, ".announcement-description"), location=text_at(soup, ".seller-contact-location-content"),
             **price_fields(clean(price)))

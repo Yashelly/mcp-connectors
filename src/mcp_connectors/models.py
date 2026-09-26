@@ -47,6 +47,7 @@ class CarListing(Model):
     currency: str | None = None
     price_raw: str | None = None
     mileage_km: int | None = None
+    color: str | None = Field(default=None, description="Exterior color as published by the source; null when unavailable.")
     fuel: str | None = None
     transmission: str | None = None
     engine: str | None = None

@@ -22,6 +22,23 @@ def fixture(source, kind):
 
 
 class ParsingTests(unittest.TestCase):
+    def test_autoplius_color_and_missing_color(self):
+        adapter = self.adapters["autoplius"]
+        html = fixture("autoplius", "listing")
+        url = "https://autoplius.lt/skelbimai/example-90000001.html"
+        item = adapter.parse_listing(html, url)
+        self.assertEqual(item.model_dump()["color"], "Pilka / sidabrinė")
+        soup = adapter.soup(html)
+        for row in soup.select(".parameter-row"):
+            if row.select_one(".parameter-label").get_text(strip=True) == "Spalva":
+                row.select_one(".parameter-value").clear()
+        self.assertIsNone(adapter.parse_listing(str(soup), url).color)
+        for row in soup.select(".parameter-row"):
+            if row.select_one(".parameter-label").get_text(strip=True) == "Spalva":
+                row.decompose()
+        self.assertIsNone(adapter.parse_listing(str(soup), url).color)
+        self.assertIsNone(adapter.parse_search(fixture("autoplius", "search"), adapter.info.website, 1).items[0].color)
+
     def setUp(self):
         self.adapters = create_connectors(BrowserRuntime(Settings()))
 

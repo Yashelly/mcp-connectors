@@ -22,3 +22,8 @@ The runtime never uses the in-app browser as a fallback.
 The visible-session follow-up also inspected Autogidas native finance banners:
 they use `a.item-link` with `rel="sponsored"` and no car title. A regression test
 includes a reduced banner so it cannot invalidate an otherwise valid result page.
+
+Autoplius color row: observed September 26, 2026 on public listing 32152464
+(Volkswagen Passat). The `Spalva` parameter used the existing parameter-row,
+parameter-label and parameter-value classes, with value `Pilka / sidabrinė`.
+Only that nonpersonal DOM row was added to the anonymized detail fixture.
