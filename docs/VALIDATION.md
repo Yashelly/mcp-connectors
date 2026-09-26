@@ -218,3 +218,18 @@ not contact target sites. Live checks are separate and intentionally small.
 - The new managed tunnel task still needs installation on the home server.
   Reboot, sign-out, Windows Server editions, and real OpenAI outage recovery
   were not tested. Periodic triggers recover exited processes, not hangs.
+
+
+## Autoplius exterior color (September 26, 2026)
+
+Inspected a real visible-Chrome search result and listing 32152464 (Volkswagen
+Passat). Its `.parameter-row` contained `.parameter-label` = `Spalva` and
+`.parameter-value` = `Pilka / sidabrinė`. A real stdio MCP `get_listing` call
+returned `status: ok` and that exact value in `item.color` after the fix.
+The reduced fixture preserves the observed color row. Regression coverage checks
+serialization, absent/blank color and search summaries returning null.
+
+`scripts/check.ps1` passed 49 tests and stdio/HTTP smoke. The initial sandboxed
+run denied CIM access for three existing Task Scheduler tests; rerunning with
+Windows CIM access passed. Other source websites were not live-tested for this
+field-only change. Autogidas color extraction is not implemented.
