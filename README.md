@@ -5,6 +5,12 @@ Python SDK v2, async Playwright, and visible Google Chrome (Chromium engine). In
 adapters share a bounded browser runtime with a dedicated persistent profile.
 No accounts are required. Headless mode remains an explicit option.
 
+An optional [LinkedIn MCP integration](docs/LINKEDIN.md) connects to the upstream
+server referenced by Agent Reach. It adds read tools for jobs, people and
+companies through a separate local backend with a manual LinkedIn login.
+It is disabled until `MCP_LINKEDIN_URL` is configured and does not change the
+existing public job/car search defaults.
+
 Intended for self-hosting on home servers, personal PCs, or other Windows hosts
 with a public IP address. This describes the host's Internet connection; the MCP
 endpoint remains bound to loopback (`127.0.0.1`) by default.
@@ -167,6 +173,11 @@ does not guarantee site access; unresolved challenges still return `blocked`.
 | `search_jobs` | `options`, optional `sources` | Results and errors per job source |
 | `search_cars` | `options`, optional `sources` | Results and errors per car source |
 | `get_listing` | `source`, `url` | One detail record or explicit failure |
+| `linkedin_status` | None | Optional LinkedIn backend reachability and tool compatibility |
+| `linkedin_search_jobs` | `options` | LinkedIn job IDs and raw sections |
+| `linkedin_get_job_details` | `job_id` | LinkedIn job sections |
+| `linkedin_get_person_profile` | `linkedin_username`, optional `sections`, `max_scrolls` | LinkedIn profile sections |
+| `linkedin_get_company_profile` | `company_name`, optional `sections` | LinkedIn company sections |
 
 Job sources are `cvbankas`, `cvmarket`, `cvonline`; car sources are `autoplius`,
 `autogidas`. Omit `sources` to select all in that category; `[]` selects none.
