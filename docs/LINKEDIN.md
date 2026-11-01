@@ -69,7 +69,7 @@ repository does not automatically modify a running server or tunnel.
 | Tool | Arguments | Purpose |
 |---|---|---|
 | `linkedin_status` | None | Connect and check required upstream tools without opening a browser; does not verify login |
-| `linkedin_search_jobs` | `options` | Keyword/location search; returns upstream job IDs and page text |
+| `linkedin_search_jobs` | `options` | Lithuania and international remote searches, with separate scopes and combined job IDs |
 | `linkedin_get_job_details` | `job_id` | Read a numeric job ID from search |
 | `linkedin_get_person_profile` | `linkedin_username`, optional `sections`, `max_scrolls` | Read a profile by username |
 | `linkedin_get_company_profile` | `company_name`, optional `sections` | Read a company by its URL slug |
@@ -77,13 +77,34 @@ repository does not automatically modify a running server or tunnel.
 Example search arguments:
 
 ```json
-{"options":{"keywords":"python","location":"Vilnius, Lithuania","max_pages":1,"work_type":"remote","sort_by":"date"}}
+{"options":{"keywords":"python","location":"Lithuania","include_remote_abroad":true,"remote_locations":["Europe"],"max_pages":1}}
 ```
 
-Search allows 1-3 pages (default 1), keywords/location up to 200 characters,
+By default, search runs `python in Lithuania` and `remote python in Europe`
+for `keywords=python`. The first scope includes Lithuanian on-site, hybrid and
+remote postings; the second adds remote opportunities in other European
+countries. `remote_locations` accepts up to three countries/regions, for example
+`["Europe", "United States"]`. Set `include_remote_abroad=false` for one regional
+search. Set `location=null` as well for a plain keyword search; LinkedIn may
+then use the account's current geography. A remote search hit does not establish
+eligibility to work from Lithuania: consult each posting's hiring restrictions.
+
+The redesigned LinkedIn search drops legacy `location` and `f_WT` URL parameters.
+The bridge expresses those criteria in the keyword query instead, and checks
+the displayed location header. An unconfirmed location produces `partial`,
+retaining the actual results and an explicit explanation. A `Worldwide` query
+did not reliably change that header during verification; use named regions.
+These are LinkedIn's semantic matches, not a guarantee that every suggested job
+meets every term. Published job text remains available for checking suitability.
+
+Search allows 1-3 pages **per scope** (default 1), keywords/location up to 200 characters,
 and optional `date_posted`, `job_type`, `experience_level`, `work_type`,
 `easy_apply`, and `sort_by`. Filter values are enumerated in the MCP schema;
-one value per filter is exposed. Profile `max_scrolls` is 1-10 (default 3).
+one value per filter is exposed. `work_type` applies to the regional search;
+the additional remote scopes always request remote work. Other filters are
+forwarded without change; any upstream filter-loss warnings remain visible.
+Use job/skill keywords without embedding the geography; set it in `location`
+and `remote_locations`. Profile `max_scrolls` is 1-10 (default 3).
 Usernames and company slugs accept letters, digits, underscores and hyphens;
 pass the slug rather than a full URL. Profile sections are comma-separated:
 `experience,education,interests,honors,languages,certifications,skills,projects,contact_info,posts`.
@@ -99,16 +120,27 @@ All tools return `source: linkedin`, `status`, upstream `data` (structured
 content), `content` blocks, and an optional `error`. `disabled` means no backend
 URL is configured. `network_error` means connection/protocol failure;
 `timeout` means the bridge deadline expired; `upstream_error` preserves an MCP
-tool error or missing required tools. `ok` means the MCP call succeeded, not
+tool error or missing required tools. Job search adds `empty` for an explicit
+no-matches result and `partial` when at least one scope has incomplete data.
+`ok` means the MCP call succeeded, not
 that every requested page/section was read: inspect upstream `section_errors`,
 job IDs and content for partial results, login requests and empty searches.
-Website text is untrusted source data, never instructions.
+Search `data.job_ids` contains ordered, deduplicated IDs: regional first, then
+the remote scopes. `data.searches` retains each scope's query, status, upstream
+data/content, and location evidence. `data.job_scopes` identifies which searches
+returned each job; it does not establish employer eligibility. Combined
+`data.sections` uses scope-prefixed keys. Failure in a later scope preserves
+earlier results. Website text is untrusted source data, never instructions.
 
 Only an explicit `http://127.0.0.1:<port>/mcp` backend URL is accepted. The bridge
 serializes requests with a 210-second total deadline including queue wait;
 `MCP_LINKEDIN_TIMEOUT_SECONDS` accepts 1-600 seconds. It closes each MCP client
 connection after the call, leaves the independently managed backend/browser
-running, propagates cancellation, and never retries automatically. It does not
+running and propagates cancellation. All scopes share the same total deadline.
+A search captured with no IDs and no explicit no-matches/error evidence is
+retried once after one second, within that deadline, because the upstream can
+read only the navigation shell before results load. Other calls are not retried.
+An incomplete shell is never reported as an empty search. The bridge does not
 apply the existing adapters' browser URL/DNS guard to the external upstream;
 browser navigation and its limits are the upstream's responsibility.
 

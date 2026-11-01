@@ -39,7 +39,9 @@ async def check(args):
                 print(json.dumps({"status": "ok", "backend": status["data"], "live_tested": False}))
                 return
             search = unpack(await client.call_tool("linkedin_search_jobs", {
-                "options": {"keywords": args.keywords, "location": args.location, "max_pages": 1},
+                "options": {"keywords": args.keywords, "location": args.location, "max_pages": 1,
+                            "include_remote_abroad": not args.no_remote_abroad,
+                            "remote_locations": args.remote_location or ["Europe"]},
             }))
             if search["status"] != "ok":
                 raise RuntimeError(json.dumps(search))
@@ -57,8 +59,12 @@ async def check(args):
                                    + json.dumps(detail_data.get("section_errors", {})))
             if data.get("section_errors"):
                 raise RuntimeError("Live search returned partial data: " + json.dumps(data["section_errors"]))
+            scopes = [{"scope": item["scope"], "location": item["location"], "status": item["status"],
+                       "location_evidence": item["location_evidence"], "attempts": item["attempts"],
+                       "job_count": len((item["data"] or {}).get("job_ids", []))}
+                      for item in data.get("searches", [])]
             print(json.dumps({"status": "ok", "live_tested": True, "job_count": len(job_ids),
-                              "detail_sections": sorted(detail_data["sections"])}))
+                              "searches": scopes, "detail_sections": sorted(detail_data["sections"])}))
 
 
 if __name__ == "__main__":
@@ -66,5 +72,7 @@ if __name__ == "__main__":
     parser.add_argument("--backend-url", default="http://127.0.0.1:8001/mcp")
     parser.add_argument("--live", action="store_true", help="Open LinkedIn if needed; requires manual login")
     parser.add_argument("--keywords", default="python")
-    parser.add_argument("--location", default="Vilnius, Lithuania")
+    parser.add_argument("--location", default="Lithuania")
+    parser.add_argument("--no-remote-abroad", action="store_true")
+    parser.add_argument("--remote-location", action="append", help="Additional remote region; repeat up to three times")
     asyncio.run(check(parser.parse_args()))

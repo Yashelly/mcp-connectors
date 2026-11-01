@@ -27,3 +27,10 @@ Autoplius color row: observed September 26, 2026 on public listing 32152464
 (Volkswagen Passat). The `Spalva` parameter used the existing parameter-row,
 parameter-label and parameter-value classes, with value `Pilka / sidabrinė`.
 Only that nonpersonal DOM row was added to the anonymized detail fixture.
+
+LinkedIn search JSON: observed on November 1, 2026 through the authorized upstream
+MCP backend, using `python in Lithuania` and `remote python in Europe` in the
+redesigned job search. These reduced fixtures preserve the count/header layout
+and published location/work-type labels. Names and job IDs are replaced;
+the shared synthetic ID intentionally exercises deduplication across searches.
+No account, session or cookie data is included.

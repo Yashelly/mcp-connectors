@@ -8,6 +8,8 @@ No accounts are required. Headless mode remains an explicit option.
 An optional [LinkedIn MCP integration](docs/LINKEDIN.md) connects to the upstream
 server referenced by Agent Reach. It adds read tools for jobs, people and
 companies through a separate local backend with a manual LinkedIn login.
+LinkedIn job search combines Lithuania with European remote opportunities by
+default; additional remote countries/regions can be selected in the options.
 It is disabled until `MCP_LINKEDIN_URL` is configured and does not change the
 existing public job/car search defaults.
 
