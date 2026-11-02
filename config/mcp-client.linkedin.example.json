@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "mcp-connectors": {
+      "command": "C:\\Users\\rober\\mcp-connectors\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "mcp_connectors"],
+      "env": {
+        "MCP_HEADLESS": "false",
+        "MCP_BROWSER_CHANNEL": "chrome",
+        "MCP_LINKEDIN_URL": "http://127.0.0.1:8001/mcp"
+      }
+    }
+  }
+}

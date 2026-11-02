@@ -233,3 +233,82 @@ serialization, absent/blank color and search summaries returning null.
 run denied CIM access for three existing Task Scheduler tests; rerunning with
 Windows CIM access passed. Other source websites were not live-tested for this
 field-only change. Autogidas color extraction is not implemented.
+
+## Optional LinkedIn MCP backend (October 29, 2026)
+
+- Confirmed that Agent Reach 1.5's LinkedIn channel references
+  `stickerdaniel/linkedin-mcp-server`. Agent Reach's current main branch uses
+  OpenCLI; this integration intentionally follows the requested earlier MCP
+  backend. Inspected the published 4.28.0 wheel, rather than assuming its API
+  matches the upstream main branch. The published package is now named
+  `mcp-server-linkedin`.
+- Installed the backend in an isolated `.venv-linkedin` using Python 3.12.14.
+  The existing main environment remains Python 3.12.2 with MCP SDK 2.2.0.
+  All optional dependencies are pinned in `requirements.linkedin.lock`.
+  `scripts/linkedin.ps1 -Action Setup` and the isolated dependency check passed.
+- Started the actual upstream 4.28.0 HTTP server on loopback port 8001.
+  A real MCP client connected through the main server's stdio tools and
+  `linkedin_status` found all four required upstream read tools, with no
+  missing tools. This verifies MCP transport compatibility, not LinkedIn login.
+- The first live search attempt exposed an upstream Windows private-state
+  preflight rejection: the home-directory ancestry grants a sandbox account
+  replacement rights, so the managed browser installer refused its temporary
+  directory. This occurred before a LinkedIn request; it was not site blocking.
+  No home-directory ACLs or existing AppContainer/sandbox grants were changed.
+- The launcher now selects installed Chrome and creates a separate per-user
+  state root under ProgramData, with owner-only state/installer directories.
+  New directories are hardened with upstream helpers; existing directories
+  and their ancestry are verified without changing their ACLs. Repeated
+  private-state preflight passed. The backend then opened a separate visible
+  Chrome profile for manual LinkedIn login, with automatic browser-cookie
+  imports disabled.
+- The subsequent live search returned the upstream's explicit login-in-progress
+  message. Authentication, successful live job search/detail extraction, people
+  profiles, company pages, and LinkedIn filter behavior remain **unverified**.
+  The login window and backend were left running for manual completion.
+  `scripts/smoke_linkedin.py --live` repeats one search page and one detail read
+  after login; it requires job IDs and no failed sections before reporting success.
+- `scripts/check.ps1` passed **57 tests** and real stdio/HTTP offline Chromium
+  checks. LinkedIn coverage includes public tool argument forwarding, input
+  rejection, read-only tool allowlisting, optional/disabled startup, raw and
+  structured upstream content, tool errors, missing upstream tools, sanitized
+  connection errors, bounded queue wait, cancellation and client cleanup.
+  The ordinary check does not require an installed or running LinkedIn backend.
+- No remote workloads, existing scheduled tasks, tunnel configuration, personal
+  browser profiles, or other sites were changed or live-revalidated. Enabling
+  the bridge in an existing deployment still requires setting its launch
+  environment's `MCP_LINKEDIN_URL` and restarting that main server.
+
+## LinkedIn geography and international remote search (November 1, 2026)
+
+- After manual sign-in on the authorized Windows host, real searches confirmed
+  that the redesigned LinkedIn route drops legacy `location` and `f_WT` URL
+  parameters. A plain `remote python` search remained in the account's current
+  Lithuanian geography. That is a query/compatibility issue, not failed login.
+- `python in Lithuania` produced a `Lithuania` result header and job cards in
+  Vilnius, Kaunas and Lithuania, including hybrid, on-site and remote postings.
+  `remote python in Europe` produced a `Europe` header and remote postings in
+  Latvia, Poland, Austria, Bulgaria, Ireland and other European locations.
+  `remote python in United States` also produced the matching country header
+  and remote US postings. These observations justify using the keyword syntax.
+- A `Worldwide` query did not reliably replace the current region. The bridge
+  therefore defaults to named `Lithuania` and `Europe` searches, and exposes
+  configurable remote countries/regions. It verifies a named location against
+  the displayed search header and returns partial results if that evidence is
+  absent. This is not an item-level guarantee of employer hiring eligibility.
+- The new stdio MCP implementation was live-tested against the existing signed-in
+  upstream backend through a loopback SSH forward before production rollout.
+  It returned **25 Lithuanian jobs plus 25 European remote jobs**, with matching
+  location evidence, **50 distinct IDs**, and no section errors. One regional
+  attempt first captured only the navigation shell; the single bounded retry
+  recovered the actual result page. A job detail read returned `job_posting`
+  without section errors. The saved login and upstream installation were retained.
+- `scripts/check.ps1` passed **65 tests**, dependency checks and both stdio/HTTP
+  offline browser smoke checks. Added coverage verifies keyword conversion,
+  separate search scopes, deduplication, explicit empty results, malformed
+  payloads, rejection of an unconfirmed geography, a single loading-shell retry,
+  and preservation of completed results when another scope fails or times out.
+- All scopes share the configured total timeout. Other legacy filters are still
+  passed to upstream; any warnings that LinkedIn drops them are retained. The
+  change does not claim live verification of every filter, every country,
+  every page count, or eligibility to work from Lithuania for remote vacancies.

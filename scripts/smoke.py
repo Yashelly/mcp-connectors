@@ -10,7 +10,7 @@ import os
 
 from mcp import Client, StdioServerParameters
 
-EXPECTED = {"cvbankas", "cvonline", "autogidas", "cvmarket", "autoplius"}
+EXPECTED = {"cvbankas", "cvonline", "autogidas", "cvmarket", "autoplius", "linkedin"}
 
 
 def unpack(result):
@@ -27,12 +27,14 @@ async def check(http_url: str | None) -> None:
         command=sys.executable,
         args=["-m", "mcp_connectors"],
         cwd=str(Path(__file__).resolve().parents[1]),
-        env={"MCP_HEADLESS": "true"},
+        env={"MCP_HEADLESS": "true", "MCP_LINKEDIN_URL": ""},
     )
     async with asyncio.timeout(60):
         async with Client(target, read_timeout_seconds=45) as client:
             names = {tool.name for tool in (await client.list_tools()).tools}
-            assert names == {"health", "list_connectors", "browser_check", "search_jobs", "search_cars", "get_listing"}, names
+            assert names == {"health", "list_connectors", "browser_check", "search_jobs", "search_cars", "get_listing",
+                             "linkedin_status", "linkedin_search_jobs", "linkedin_get_job_details",
+                             "linkedin_get_person_profile", "linkedin_get_company_profile"}, names
             status = unpack(await client.call_tool("health", {}))
             assert status["status"] == "ok", status
             expected_headless = status["headless"]
@@ -41,6 +43,11 @@ async def check(http_url: str | None) -> None:
             adapters = unpack(await client.call_tool("list_connectors", {}))
             assert {item["id"] for item in adapters} == EXPECTED, adapters
             assert all(item["status"] == "implemented" for item in adapters), adapters
+            if not status["linkedin"]["configured"]:
+                linkedin = unpack(await client.call_tool("linkedin_status", {}))
+                assert linkedin["status"] == "disabled", linkedin
+            invalid_linkedin = await client.call_tool("linkedin_get_job_details", {"job_id": "http://127.0.0.1"})
+            assert invalid_linkedin.is_error, invalid_linkedin
             rejected = unpack(await client.call_tool("get_listing", {"source": "cvbankas", "url": "http://127.0.0.1/private"}))
             assert rejected["status"] == "invalid_url", rejected
             invalid = await client.call_tool("search_jobs", {"options": {"limit": 51}})
@@ -63,7 +70,7 @@ async def all_transports():
     root = Path(__file__).resolve().parents[1]
     with subprocess.Popen([sys.executable, "-m", "mcp_connectors", "--transport", "streamable-http", "--port", str(port)],
                           cwd=root, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                          env={**os.environ, "MCP_HEADLESS": "true"},
+                          env={**os.environ, "MCP_HEADLESS": "true", "MCP_LINKEDIN_URL": ""},
                           creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0) as process:
         try:
             for _ in range(50):
